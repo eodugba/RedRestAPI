@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html ng-app="visits">
+<style>
+
+input[type=text], input[type=password] {
+    padding: 6px 20px;
+    margin: 8px 0;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+}
+
+button {
+    background-color: #4CAF50;
+    color: white;
+    padding: 6px 20px;
+    margin: 8px 0;
+    border: none;
+    cursor: pointer;
+    width: 100%;
+}
+
+button:hover {
+    opacity: 0.8;
+}
+
+
+</style>
+    <script src="https://code.angularjs.org/1.3.14/angular.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/lodash.js/2.4.1/lodash.js"></script>
+    <script src="http://rawgit.com/angular-ui/angular-google-maps/2.0.X/dist/angular-google-maps.js"></script>
+    <script src="cities.js"></script>
+<script>
+
+function authenticate(uname,psw)
+ {
+   var userid;
+   var  x = new XMLHttpRequest();
+   var url = "http://localhost:8080/userdata/user/"+uname+"/password/"+psw;
+   x.onreadystatechange = function() {
+    if (this.status == 500 && this.readyState == 4)
+      {
+         window.alert("Invalid UserID or Password");
+      }   
+    if (this.readyState == 4){
+      if( this.status == 200) {
+        var json = JSON.parse(this.responseText);
+        sessionStorage.setItem('UserID', json.userId);
+        document.getElementById("uid").innerHTML = json.userId;
+        //alert(json.firstName+' '+json.lastName);
+        document.getElementById("uname2").innerHTML = '<h2>Cities Visited By '+ json.firstName+' '+json.lastName+'<h2>';
+        sessionStorage.setItem('UserName','<h2>Cities Visited By '+ json.firstName+' '+json.lastName+'<h2>');
+        document.getElementById("psw").style.display = 'none';
+         document.getElementById("plbl").style.display = 'none';
+        document.getElementById("lgout").hidden="";
+        document.getElementById("uname").disabled = true;
+        document.getElementById("lgin").style.display = 'none';
+        document.getElementById("login").style.display='none';
+        document.getElementById("login2").style.display='block';
+        location.reload();
+        }
+    }
+    };
+   x.onerror= function() {
+      document.getElementById("logerr").innerHTML = 'UserID or Password Invalid';
+      document.getElementById("logerr").hidden="";
+   };
+   x.open("GET", url);
+   x.send();
+
+ }     
+ function logout()
+ {
+        document.getElementById("psw").style.display = 'initial';
+        document.getElementById("plbl").style.display = 'initial';
+        document.getElementById("lgout").hidden="hidden";
+        document.getElementById("uname").disabled = false;
+        document.getElementById("lgin").style.display = 'initial';
+        sessionStorage.setItem('UserID',"");
+        location.reload();
+ }
+</script>
+<body>
+<div id="login" style="display:block">
+  <table>
+    <thead>
+      <th><label><b>Username</b></label>
+          <input type="text" placeholder="Enter Username" id="uname" ng_model="UserName" required>
+      </th>
+      <th><label id="plbl"><b>Password</b></label>
+          <input type="password" placeholder="Enter Password" id="psw" required>
+      </th>
+      
+      <th><label><b>UserID:</b></label>
+          <label id="uid"></label>
+      </th>
+      <th><button type="submit" id="lgin" onclick="authenticate(uname.value,psw.value)">Login</button></th>
+     
+    </thead>
+   </table>
+   
+ </div>   
+ 
+ <div id="login2" style="display:none">
+  <table>
+    <thead>
+      <th>
+          <label id="uname2" ng_model="UserName2">
+          
+      </th>
+       <th><button type="submit" hidden="hidden" id="lgout" onclick="logout()">Logout</button></th>
+    </thead>
+   </table>
+   
+ </div>  
+ <div id="map" style="width:100%;height:500px;"></div>  
+         
+    <div ng-controller="cities">
+        <h2>Cities Visited :{{UserName2}}</h2>
+        <table class="table table-striped table-hover">
+         <thead>
+           <tr>
+              <th class="padding-left">City Id</th>
+              <th class="padding-left">City Name</th>
+              <th class="padding-right">Latitude</th>
+              <th class="padding-right">Longitude</th>
+           </tr>
+         </thead>
+         <tbody>
+         <tr  ng-repeat="visit in userCitiesVisited" >
+            <td class="padding-left"> {{visit.cityId}}</td>
+            <td class="padding-left">{{visit.name}}</td>
+            <td class="padding-right">{{visit.latitude}}</td>
+            <td class="padding-right">{{visit.longitude}}</td>
+         </tr>
+         </tbody>
+        </table>
+     </div>    
+<div id="map" style="width:100%;height:500px;"></div>
+
+<script>
+        // If sessionStorage is storing default values (ex. name), exit the function and do not restore data
+       // Alert('SessionStorage'+sessionStorage.UserID+':'+sessionStorage.UserName);
+       //debugger;
+       console.log(sessionStorage);
+        if (sessionStorage.UserID !== "" && sessionStorage.UserID !== undefined){    
+               
+               document.getElementById("uid").innerHTML = sessionStorage.UserID;
+               document.getElementById("uname2").innerHTML = sessionStorage.UserName;
+               document.getElementById("psw").style.display = 'none';
+               document.getElementById("plbl").style.display = 'none';
+               document.getElementById("lgout").hidden="";
+               document.getElementById("uname").disabled = true;
+               document.getElementById("lgin").style.display = 'none';
+               document.getElementById("login").style.display='none';
+               document.getElementById("login2").style.display='block';
+               document.getElementById("logerr").hidden="hidden";
+        }
+
+function myMap() {
+//alert("Got here");
+  var mapCanvas = document.getElementById("map");
+  var myCenter=new google.maps.LatLng(42.877742,-97.380979);
+  var mapOptions = {center: myCenter, zoom: 4};
+  var bound = new google.maps.LatLngBounds();
+  var map = new google.maps.Map(mapCanvas, mapOptions);
+var  x = new XMLHttpRequest();
+   var url = "http://localhost:8080/user/"+sessionStorage.UserID +"/visits";
+   //alert("map:"+url);
+   x.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+        // alert("inside map");
+         var json = JSON.parse(this.responseText);
+         //alert("Json:"+json);
+         for (i in json) {
+         var location=new google.maps.LatLng(parseFloat(json[i].latitude),parseFloat(json[i].longitude));
+         bound.extend(new google.maps.LatLng(parseFloat(json[i].latitude),parseFloat(json[i].longitude)));
+         placeMarker(map,location,json[i].name);
+         //alert("lat: "+json[i].latitude+",lng: "+json[i].longitude);
+       }
+       myCenter= new google.maps.LatLng(bound.getCenter());
+    }
+   } ;
+   x.open("GET", url);
+   x.send();
+}
+
+function placeMarker(map, location,name) {
+  var marker = new google.maps.Marker({
+    position: location,
+    map: map
+  });
+  var infowindow = new google.maps.InfoWindow({
+    content:  name+'(Lat: ' + location.lat() + ', Lng: ' + location.lng() + ')'
+  });
+  infowindow.open(map,marker);
+}
+</script>
+
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBsKTYU032NupW8YC9QTMFqSD71v14_rqA&callback=myMap"></script>
+</body>
+</html>

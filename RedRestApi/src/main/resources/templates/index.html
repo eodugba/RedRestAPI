@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html xmlns:ng="http://angularjs.org/" ng-app="redrestapi">
+
+<head>
+    <meta charset="utf-8" />
+    <title>AngularJS Plunker</title>
+    <link rel="stylesheet" href="style.css" />
+    <script src="https://code.angularjs.org/1.3.14/angular.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/lodash.js/2.4.1/lodash.js"></script>
+    <script src="http://rawgit.com/angular-ui/angular-google-maps/2.0.X/dist/angular-google-maps.js"></script>
+    <script type='text/javascript' src='script.js'></script>
+    <script src="visitsListController.js"></script><!--script-->
+    <!--css-->
+    <style type="text/css">
+        html, body, #map_canvas {
+            height: 100%;
+            width: 100%;
+            margin: 0px;
+        }
+
+        #map_canvas {
+            position: relative;
+        }
+
+        .angular-google-map-container {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            right: 0;
+            left: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="map_canvas" ng-controller="visitsListController">
+    <ui-gmap-google-map center="map.center" zoom="map.zoom" draggable="false" options="options">
+          <ui-gmap-marker ng-repeat="visits in userCitiesVisited" coords="latitude: "||{{visits.latitude||",longitude: "||visits.longitude}} idkey={{visits.city_Id}}>
+          </ui-gmap-marker>
+    </ui-gmap-google-map>
+   </div>
+   <div ng-hide"loading">
+        <h2>Cities Visited</h2>
+        <table class="table table-striped table-hover">
+         <thead>
+           <tr>
+              <th class="padding-left">City Id</th>
+              <th class="padding-left">City Name</th>
+              <th class="padding-right">Latitude</th>
+              <th class="padding-right">Longitude</th>
+           </tr>
+         </thead>
+         <tbody>
+         <tr  ng-repeat="visit in userCitiesVisited" >
+            <td class="padding-left"> {{visit.cityId}}</td>
+            <td class="padding-left">{{visit.name}}</td>
+            <td class="padding-right">{{visit.latitude}}</td>
+            <td class="padding-right">{{visit.longitude}}</td>
+         </tr>
+         </tbody>
+        </table>
+     </div>         
+</body>
+
+</html>
